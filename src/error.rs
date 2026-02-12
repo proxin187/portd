@@ -1,12 +1,19 @@
-use std::path::PathBuf;
 
 
 #[derive(Debug)]
 pub enum Error {
     Io(std::io::Error),
-    ScriptFailed(PathBuf),
-    InvalidPortFormat(String),
+    Semver(semver::Error),
+    InvalidPort(std::path::PathBuf),
+    MissingDependencies(Vec<String>),
     NoSuchPort(String),
+    ResolveFailed(String, semver::VersionReq),
+}
+
+impl From<semver::Error> for Error {
+    fn from(err: semver::Error) -> Error {
+        Error::Semver(err)
+    }
 }
 
 impl From<std::io::Error> for Error {
@@ -19,9 +26,11 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         match self {
             Error::Io(err) => f.write_fmt(format_args!("io error: {}", err)),
-            Error::ScriptFailed(path) => f.write_fmt(format_args!("script failed: {}", path.to_string_lossy())),
-            Error::InvalidPortFormat(port) => f.write_fmt(format_args!("invalid port format: {}", port)),
+            Error::Semver(err) => f.write_fmt(format_args!("semver error: {}", err)),
+            Error::InvalidPort(port) => f.write_fmt(format_args!("invalid port format: {}", port.to_string_lossy())),
+            Error::MissingDependencies(ports) => f.write_fmt(format_args!("missing dependencies: {}", ports.join(" "))),
             Error::NoSuchPort(port) => f.write_fmt(format_args!("no such port: {}", port)),
+            Error::ResolveFailed(name, version) => f.write_fmt(format_args!("unable to resolve version requirement: {}@{}", name, version)),
         }
     }
 }

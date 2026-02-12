@@ -1,28 +1,22 @@
 mod error;
-mod port;
+mod ports;
+
+use error::Error;
+use ports::Ports;
 
 use clap::{Parser, ValueEnum};
 
 
-// doas portd pull && doas portd fetch sbase ubase
-// doas portd clean neofetch
+// doas port install world/rxfetch@1.0
+// doas port remove world/rxfetch@1.0
 
 
 #[derive(Clone, Copy, ValueEnum)]
 pub enum Action {
-    /// Fetch, build and install one or more ports
-    Fetch,
-    /// Clean one or more ports from the system
-    Clean,
-}
-
-impl Action {
-    pub fn args(&self) -> &'static str {
-        match self {
-            Action::Fetch => "fetch",
-            Action::Clean => "clean",
-        }
-    }
+    /// Install one or more ports
+    Install,
+    /// Remove one or more ports from the system
+    Remove,
 }
 
 #[derive(Parser)]
@@ -34,7 +28,7 @@ pub struct Args {
 fn main() {
     let args = Args::parse();
 
-    if let Err(err) = port::ports(args.ports, args.action) {
+    if let Err(err) = ports::install(args.ports) {
         eprintln!("error: {}", err);
     }
 }
